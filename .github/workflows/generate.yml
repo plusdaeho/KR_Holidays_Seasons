@@ -3,8 +3,7 @@ name: Generate Korean Calendar ICS
 on:
   # ① 매달 1일 오전 3시 (KST) = UTC 18:00 전날
   schedule:
-    - cron: "0 18 28-31 * *"   # 말일 체크 (다음달 1일 KST 트리거)
-    - cron: "0 18 1 * *"       # 매월 1일 UTC 18:00 = KST 03:00
+    - cron: "0 18 * * 2" # 매주 화요일 UTC 18:00 = 한국 시간(KST) 매주 수요일 오전 03:00
 
   # ② 수동 트리거 (Actions 탭 → Run workflow 버튼)
   workflow_dispatch:
