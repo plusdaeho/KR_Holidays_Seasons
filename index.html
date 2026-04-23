@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>한국 절기 캘린더</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:     #1a1a18;
+      --paper:   #f4f0e8;
+      --muted:   #7a7568;
+      --red:     #c0392b;
+      --green:   #2d6a4f;
+      --blue:    #1a3a5c;
+      --accent:  #b5541a;
+      --border:  rgba(26,26,24,.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Noto Serif KR', serif;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* 한지 질감 배경 */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 상단 장식선 */
+    .top-rule {
+      width: min(680px, 100%);
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .top-rule span { flex: 1; height: 1px; background: var(--border); }
+    .top-rule em { font-style: normal; font-size: .7rem; letter-spacing: .2em; color: var(--muted); }
+
+    /* 헤더 */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative; z-index: 1;
+    }
+    .kicker {
+      font-size: .68rem; letter-spacing: .3em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      font-weight: 300;
+      line-height: 1.2;
+      letter-spacing: -.01em;
+    }
+    h1 strong { font-weight: 600; }
+    .subtitle {
+      margin-top: .9rem;
+      font-size: .9rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* 구독 박스 */
+    .subscribe-box {
+      width: min(560px, 100%);
+      background: #fffdf7;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2.4rem 2.4rem 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,.05);
+      position: relative; z-index: 1;
+    }
+    .subscribe-box h2 {
+      font-size: 1rem; font-weight: 600;
+      margin-bottom: 1.2rem;
+      letter-spacing: .02em;
+    }
+
+    .url-row {
+      display: flex; gap: .6rem;
+      align-items: stretch;
+      margin-bottom: 1rem;
+    }
+    .url-input {
+      flex: 1;
+      padding: .65rem .9rem;
+      font-family: 'DM Mono', monospace;
+      font-size: .78rem;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--ink);
+      outline: none;
+      cursor: text;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .url-input:focus { border-color: var(--accent); }
+
+    .btn {
+      padding: .65rem 1.1rem;
+      background: var(--ink);
+      color: var(--paper);
+      border: none; border-radius: 3px;
+      font-family: 'Noto Serif KR', serif;
+      font-size: .8rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .18s;
+    }
+    .btn:hover { background: var(--accent); }
+    .btn.copied { background: var(--green); }
+
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: .6rem;
+      margin-top: 1.2rem;
+    }
+    .client-btn {
+      display: flex; align-items: center; justify-content: center; gap: .4rem;
+      padding: .55rem .5rem;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: transparent;
+      font-family: 'Noto Serif KR', serif;
+      font-size: .75rem;
+      color: var(--ink);
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color .18s, background .18s;
+    }
+    .client-btn:hover { border-color: var(--accent); background: #fdf6ee; }
+    .client-btn span { font-size: 1rem; }
+
+    /* 통계 */
+    .stats-bar {
+      width: min(560px, 100%);
+      display: flex; gap: 1px;
+      margin-bottom: 2.5rem;
+      position: relative; z-index: 1;
+    }
+    .stat-cell {
+      flex: 1;
+      background: #fffdf7;
+      border: 1px solid var(--border);
+      padding: 1rem .8rem;
+      text-align: center;
+    }
+    .stat-cell:first-child { border-radius: 4px 0 0 4px; }
+    .stat-cell:last-child  { border-radius: 0 4px 4px 0; }
+    .stat-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--accent);
+      display: block;
+    }
+    .stat-label {
+      font-size: .68rem; color: var(--muted);
+      letter-spacing: .05em; margin-top: .2rem;
+    }
+
+    /* 카테고리 설명 */
+    .legend {
+      width: min(560px, 100%);
+      position: relative; z-index: 1;
+      margin-bottom: 3rem;
+    }
+    .legend h3 {
+      font-size: .75rem; font-weight: 400; letter-spacing: .15em;
+      color: var(--muted); text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .legend-item {
+      display: flex; align-items: flex-start; gap: 1rem;
+      padding: .9rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .legend-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: .05rem; }
+    .legend-text strong { font-size: .88rem; display: block; margin-bottom: .2rem; }
+    .legend-text p { font-size: .78rem; color: var(--muted); line-height: 1.6; }
+
+    /* 갱신 일시 */
+    .updated {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem;
+      color: var(--muted);
+      text-align: center;
+      position: relative; z-index: 1;
+    }
+
+    .bottom-rule {
+      width: min(680px, 100%);
+      display: flex; align-items: center; gap: 1rem;
+      margin-top: 3rem;
+      position: relative; z-index: 1;
+    }
+    .bottom-rule span { flex: 1; height: 1px; background: var(--border); }
+    .bottom-rule em { font-style: normal; font-size: .65rem; letter-spacing: .15em; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="top-rule"><span></span><em>한국천문연구원 · data.go.kr</em><span></span></div>
+
+  <header>
+    <p class="kicker">Korean Calendar · iCal Subscribe</p>
+    <h1>한국 <strong>절기·공휴일</strong><br>캘린더 구독</h1>
+    <p class="subtitle">
+      24절기 · 잡절 · 공휴일을 하나의 .ics 파일로<br>
+      Apple · Google · Outlook 어디서든 구독하세요
+    </p>
+  </header>
+
+  <!-- 구독 박스 -->
+  <div class="subscribe-box">
+    <h2>📋 구독 URL</h2>
+    <div class="url-row">
+      <input class="url-input" id="ics-url" readonly value="로딩 중…" />
+      <button class="btn" id="copy-btn" onclick="copyUrl()">복사</button>
+    </div>
+
+    <div class="client-grid">
+      <a class="client-btn" id="apple-link" href="#"><span>🍎</span> Apple</a>
+      <a class="client-btn" id="google-link" href="#" target="_blank"><span>📅</span> Google</a>
+      <a class="client-btn" id="outlook-link" href="#"><span>💼</span> Outlook</a>
+      <a class="client-btn" id="download-link" href="#" download="korean_calendar.ics"><span>⬇️</span> 다운로드</a>
+    </div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="stats-bar">
+    <div class="stat-cell"><span class="stat-num" id="cnt-holiday">—</span><div class="stat-label">공휴일</div></div>
+    <div class="stat-cell"><span class="stat-num" id="cnt-solarTerm">—</span><div class="stat-label">24절기</div></div>
+    <div class="stat-cell"><span class="stat-num" id="cnt-miscDay">—</span><div class="stat-label">잡절</div></div>
+    <div class="stat-cell"><span class="stat-num" id="cnt-years">—</span><div class="stat-label">수집 연도</div></div>
+  </div>
+
+  <!-- 카테고리 설명 -->
+  <div class="legend">
+    <h3>포함 항목</h3>
+    <div class="legend-item">
+      <div class="legend-icon">🎌</div>
+      <div class="legend-text">
+        <strong>공휴일</strong>
+        <p>설날·추석·삼일절·광복절 등 법정 공휴일. 대체공휴일 포함.</p>
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-icon">🌿</div>
+      <div class="legend-text">
+        <strong>24절기</strong>
+        <p>입춘·우수·경칩 등 태양의 황경에 따른 24개 절기.</p>
+      </div>
+    </div>
+    <div class="legend-item">
+      <div class="legend-icon">📅</div>
+      <div class="legend-text">
+        <strong>잡절</strong>
+        <p>한식·단오·칠석·동지 등 세시 풍속으로 전해지는 절일.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="updated" id="updated-at">마지막 갱신: 불러오는 중…</div>
+
+  <div class="bottom-rule"><span></span><em>매월 1일 자동 갱신 · GitHub Actions</em><span></span></div>
+
+  <script>
+    const ICS_FILE = "korean_calendar.ics";
+    const BASE     = location.origin + location.pathname.replace(/\/?$/, "/");
+    const ICS_URL  = BASE + ICS_FILE;
+
+    // URL 세팅
+    document.getElementById("ics-url").value        = ICS_URL;
+    document.getElementById("download-link").href   = ICS_URL;
+    document.getElementById("apple-link").href      = "webcal://" + ICS_URL.replace(/^https?:\/\//, "");
+    document.getElementById("google-link").href     =
+      "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(ICS_URL);
+    document.getElementById("outlook-link").href    =
+      "ms-outlook://calendars/subscribe?url=" + encodeURIComponent(ICS_URL);
+
+    // 메타 JSON 로드
+    fetch("meta.json?_=" + Date.now())
+      .then(r => r.ok ? r.json() : null)
+      .then(m => {
+        if (!m) return;
+        const bc = m.by_category || {};
+        document.getElementById("cnt-holiday").textContent   = bc.holiday    ?? "—";
+        document.getElementById("cnt-solarTerm").textContent = bc.solarTerm  ?? "—";
+        document.getElementById("cnt-miscDay").textContent   = bc.miscDay    ?? "—";
+        document.getElementById("cnt-years").textContent     = (m.years || []).length;
+        if (m.generated_at) {
+          const d = new Date(m.generated_at);
+          document.getElementById("updated-at").textContent =
+            "마지막 갱신: " + d.toLocaleString("ko-KR", {timeZone:"Asia/Seoul"});
+        }
+      })
+      .catch(() => {});
+
+    // 복사
+    function copyUrl() {
+      const url = document.getElementById("ics-url").value;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById("copy-btn");
+        btn.textContent = "✓ 복사됨";
+        btn.classList.add("copied");
+        setTimeout(() => { btn.textContent = "복사"; btn.classList.remove("copied"); }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
