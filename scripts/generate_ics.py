@@ -134,8 +134,8 @@ def build_ics(events: list[dict], generated_at: datetime) -> str:
     for evt in unique_events:
         cat  = evt["category"]
         meta = CATEGORIES[cat]
-        prefix = "🎌" if evt["is_holiday"] else meta["prefix"]
-        summary = f"{prefix} {evt['name']}"
+        suffix = " 🎌" if evt["is_holiday"] else ""
+        summary = f"{evt['name']}{suffix}"
 
         # 다음날 (DTEND for all-day events)
         d = date(int(evt["date"][:4]), int(evt["date"][4:6]), int(evt["date"][6:]))
