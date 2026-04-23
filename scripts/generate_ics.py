@@ -35,7 +35,7 @@ CATEGORIES = {
 ENDPOINT_MAP = {
     "holiday":   "getRestDeInfo",
     "solarTerm": "get24DivisionsInfo",
-    "miscDay":   "getAnniversaryInfo",
+    "miscDay":   "getSundryDayInfo",
 }
 
 # ── API 호출 ──────────────────────────────────────────────────────────────────
