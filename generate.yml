@@ -1,0 +1,56 @@
+name: Generate Korean Calendar ICS
+
+on:
+  # ① 매달 1일 오전 3시 (KST) = UTC 18:00 전날
+  schedule:
+    - cron: "0 18 28-31 * *"   # 말일 체크 (다음달 1일 KST 트리거)
+    - cron: "0 18 1 * *"       # 매월 1일 UTC 18:00 = KST 03:00
+
+  # ② 수동 트리거 (Actions 탭 → Run workflow 버튼)
+  workflow_dispatch:
+    inputs:
+      year_range:
+        description: "현재 연도 ± 몇 년치 수집 (기본값: 2)"
+        required: false
+        default: "2"
+
+  # ③ main 브랜치 push 시에도 실행 (최초 셋업 확인용)
+  push:
+    branches: [main]
+    paths:
+      - "scripts/generate_ics.py"
+      - ".github/workflows/generate.yml"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # gh-pages 브랜치 push 권한
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 🗓️ ICS 생성
+        env:
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+          OUTPUT_DIR: dist
+          YEAR_RANGE: ${{ github.event.inputs.year_range || '2' }}
+        run: python scripts/generate_ics.py
+
+      - name: 🌐 구독 페이지 복사
+        run: |
+          cp index.html dist/index.html
+
+      - name: 🚀 GitHub Pages 배포
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          commit_message: "chore: auto-update ICS (${{ github.run_id }})"
