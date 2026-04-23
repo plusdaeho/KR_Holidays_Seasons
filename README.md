@@ -103,6 +103,6 @@ curl -X POST \
 
 ## 📦 포함 데이터
 
-- 🎌 **공휴일** (`getRestDeInfo`) — 법정 공휴일·대체공휴일
-- 🌿 **24절기** (`get24DivisionsInfo`) — 입춘~대한
-- 📅 **잡절** (`getAnniversaryInfo`) — 한식·단오·칠석 등
+- **공휴일** 🎌(`getRestDeInfo`) — 법정 공휴일·대체공휴일
+- **24절기** (`get24DivisionsInfo`) — 입춘~대한
+- **잡절** (`getAnniversaryInfo`) — 한식·단오·칠석 등
