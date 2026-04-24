@@ -320,8 +320,7 @@
       document.getElementById(`ics-url-${key}`).value          = url;
       document.getElementById(`download-link-${key}`).href     = url;
       document.getElementById(`apple-link-${key}`).href        = "webcal://" + url.replace(/^https?:\/\//, "");
-      document.getElementById(`google-link-${key}`).href       =
-        "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(url);
+      document.getElementById(`google-link-${key}`).href       = "https://calendar.google.com/calendar/render?cid=" + encodeURIComponent(url);
       document.getElementById(`outlook-link-${key}`).href      =
         "ms-outlook://calendars/subscribe?url=" + encodeURIComponent(url);
     }
