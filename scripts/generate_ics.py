@@ -18,8 +18,9 @@ import re
 # ── 설정 ──────────────────────────────────────────────────────────────────────
 API_KEY   = os.environ.get("DATA_GO_KR_API_KEY", "")
 BASE_URL  = "http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService"
-OUT_DIR   = os.environ.get("OUTPUT_DIR", "dist")
-OUT_FILE  = os.path.join(OUT_DIR, "korean_calendar.ics")
+OUT_DIR        = os.environ.get("OUTPUT_DIR", "dist")
+OUT_FILE_HOL   = os.path.join(OUT_DIR, "korean_holidays.ics")
+OUT_FILE_TERM  = os.path.join(OUT_DIR, "korean_solar_terms.ics")
 # 몇 년치 데이터를 가져올지 (현재 연도 ± YEAR_RANGE)
 YEAR_RANGE = int(os.environ.get("YEAR_RANGE", "2"))
 
@@ -105,17 +106,20 @@ def escape_ical(text: str) -> str:
     return text.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
 
 
-def build_ics(events: list[dict], generated_at: datetime) -> str:
+def build_ics(events: list[dict], generated_at: datetime,
+              calname: str = "한국 공휴일 & 절기",
+              caldesc: str = "공휴일·24절기·잡절 (한국천문연구원 데이터)",
+              relcalid: str = "korean-calendar-ics") -> str:
     lines = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//Korean Calendar//KR",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
-        "X-WR-CALNAME:한국 공휴일 & 절기",
-        "X-WR-CALDESC:공휴일·24절기·잡절 (한국천문연구원 데이터)",
+        f"X-WR-CALNAME:{calname}",
+        f"X-WR-CALDESC:{caldesc}",
         "X-WR-TIMEZONE:Asia/Seoul",
-        f"X-WR-RELCALID:korean-calendar-ics",
+        f"X-WR-RELCALID:{relcalid}",
     ]
 
     # 중복 제거 (같은 날짜+이름+카테고리)
@@ -177,12 +181,30 @@ def main():
     print(f"✅ 총 {len(all_events)}개 이벤트 수집 완료", file=sys.stderr)
 
     os.makedirs(OUT_DIR, exist_ok=True)
-    ics_content = build_ics(all_events, now)
 
-    with open(OUT_FILE, "w", encoding="utf-8", newline="") as f:
-        f.write(ics_content)
+    # ① 공휴일 전용
+    hol_events = [e for e in all_events if e["category"] == "holiday"]
+    ics_hol = build_ics(
+        hol_events, now,
+        calname="한국 공휴일",
+        caldesc="법정 공휴일·대체공휴일 (한국천문연구원 데이터)",
+        relcalid="korean-holidays-ics",
+    )
+    with open(OUT_FILE_HOL, "w", encoding="utf-8", newline="") as f:
+        f.write(ics_hol)
+    print(f"💾 저장 완료: {OUT_FILE_HOL}", file=sys.stderr)
 
-    print(f"💾 저장 완료: {OUT_FILE}", file=sys.stderr)
+    # ② 절기·잡절 전용
+    term_events = [e for e in all_events if e["category"] in ("solarTerm", "miscDay")]
+    ics_term = build_ics(
+        term_events, now,
+        calname="한국 절기·잡절",
+        caldesc="24절기·잡절 (한국천문연구원 데이터)",
+        relcalid="korean-solar-terms-ics",
+    )
+    with open(OUT_FILE_TERM, "w", encoding="utf-8", newline="") as f:
+        f.write(ics_term)
+    print(f"💾 저장 완료: {OUT_FILE_TERM}", file=sys.stderr)
 
     # 메타 JSON (구독 페이지에서 활용)
     meta = {
