@@ -28,9 +28,9 @@ KST = timezone(timedelta(hours=9))
 
 # ── 카테고리별 메타데이터 ─────────────────────────────────────────────────────
 CATEGORIES = {
-    "holiday":    {"name": "공휴일",  "color": "RED",    "prefix": "🎌"},
-    "solarTerm":  {"name": "24절기", "color": "GREEN",  "prefix": "🌿"},
-    "miscDay":    {"name": "잡절",   "color": "BLUE",   "prefix": "📅"},
+    "holiday":    {"name": "공휴일",  "color": "RED"},
+    "solarTerm":  {"name": "24절기", "color": "GREEN"},
+    "miscDay":    {"name": "잡절",   "color": "BLUE"},
 }
 
 ENDPOINT_MAP = {
@@ -138,8 +138,7 @@ def build_ics(events: list[dict], generated_at: datetime,
     for evt in unique_events:
         cat  = evt["category"]
         meta = CATEGORIES[cat]
-        suffix = " 🎌" if evt["is_holiday"] else ""
-        summary = f"{evt['name']}{suffix}"
+        summary = evt['name']
 
         # 다음날 (DTEND for all-day events)
         d = date(int(evt["date"][:4]), int(evt["date"][4:6]), int(evt["date"][6:]))
