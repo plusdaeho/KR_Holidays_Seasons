@@ -1,6 +1,6 @@
 # 🗓️ 한국 절기·공휴일 iCal 자동 생성
 
-한국천문연구원 특일 정보 API (data.go.kr)로 **24절기 · 잡절 · 공휴일**을 하나의 `.ics` 파일로 만들고  
+한국천문연구원 특일 정보 API (data.go.kr)로 **24절기 · 잡절 · 공휴일**을 `.ics` 파일로 만들고  
 GitHub Pages에 자동 배포하는 저장소입니다.
 
 ## 📁 구조
@@ -52,7 +52,7 @@ Actions 탭 → "Generate Korean Calendar ICS" → Run workflow
 
 | 트리거 | 시점 |
 |--------|------|
-| `schedule` | 매월 1일 KST 03:00 (UTC 18:00) |
+| `schedule` | 매주 수요일 KST 03:00 (UTC 화요일 18:00) |
 | `workflow_dispatch` | 수동 실행 |
 | `push` | `scripts/` 또는 `.github/workflows/` 변경 시 |
 
@@ -83,11 +83,18 @@ curl -X POST \
 
 배포 후 `https://{username}.github.io/{repo}/` 에서 구독 URL 확인
 
-| 앱 | 구독 URL |
-|----|----------|
-| Apple 캘린더 | `webcal://...` 클릭 |
-| Google 캘린더 | "다른 캘린더 추가 → URL로 추가" |
-| Outlook | "캘린더 추가 → 인터넷에서 구독" |
+두 개의 캘린더로 분리 제공됩니다:
+
+| 파일 | 내용 |
+|------|------|
+| `korean_holidays.ics` | 법정 공휴일·대체공휴일 |
+| `korean_solar_terms.ics` | 24절기·잡절 |
+
+| 앱 | 구독 방법 |
+|----|-----------|
+| Apple 캘린더 | `webcal://...` 링크 클릭 |
+| Google 캘린더 | 다른 캘린더 추가 → URL로 추가 |
+| Outlook | 캘린더 추가 → 인터넷에서 구독 |
 
 ---
 
@@ -103,6 +110,8 @@ curl -X POST \
 
 ## 📦 포함 데이터
 
-- **공휴일** 🎌(`getRestDeInfo`) — 법정 공휴일·대체공휴일
-- **24절기** (`get24DivisionsInfo`) — 입춘~대한
-- **잡절** (`getAnniversaryInfo`) — 한식·단오·칠석 등
+| 카테고리 | API 엔드포인트 | 설명 |
+|----------|---------------|------|
+| 공휴일 | `getRestDeInfo` | 법정 공휴일·대체공휴일 (`isHoliday=Y` 만 포함) |
+| 24절기 | `get24DivisionsInfo` | 입춘~대한 |
+| 잡절 | `getSundryDayInfo` | 한식·단오·칠석 등 |
