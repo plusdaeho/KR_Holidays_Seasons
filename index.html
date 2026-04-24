@@ -88,10 +88,15 @@
       box-shadow: 0 2px 20px rgba(0,0,0,.05);
       position: relative; z-index: 1;
     }
+    .subscribe-box + .subscribe-box { margin-top: 1.2rem; }
     .subscribe-box h2 {
       font-size: 1rem; font-weight: 600;
-      margin-bottom: 1.2rem;
+      margin-bottom: .4rem;
       letter-spacing: .02em;
+    }
+    .box-desc {
+      font-size: .78rem; color: var(--muted);
+      margin-bottom: 1rem; line-height: 1.5;
     }
 
     .url-row {
@@ -231,19 +236,35 @@
     </p>
   </header>
 
-  <!-- 구독 박스 -->
+  <!-- 구독 박스 ① 공휴일 전용 -->
   <div class="subscribe-box">
-    <h2>📋 구독 URL</h2>
+    <h2>🎌 공휴일 전용</h2>
+    <p class="box-desc">법정 공휴일·대체공휴일만 포함합니다.</p>
     <div class="url-row">
-      <input class="url-input" id="ics-url" readonly value="로딩 중…" />
-      <button class="btn" id="copy-btn" onclick="copyUrl()">복사</button>
+      <input class="url-input" id="ics-url-hol" readonly value="로딩 중…" />
+      <button class="btn" id="copy-btn-hol" onclick="copyUrl('hol')">복사</button>
     </div>
-
     <div class="client-grid">
-      <a class="client-btn" id="apple-link" href="#"><span>🍎</span> Apple</a>
-      <a class="client-btn" id="google-link" href="#" target="_blank"><span>📅</span> Google</a>
-      <a class="client-btn" id="outlook-link" href="#"><span>💼</span> Outlook</a>
-      <a class="client-btn" id="download-link" href="#" download="korean_calendar.ics"><span>⬇️</span> 다운로드</a>
+      <a class="client-btn" id="apple-link-hol" href="#"><span>🍎</span> Apple</a>
+      <a class="client-btn" id="google-link-hol" href="#" target="_blank"><span>📅</span> Google</a>
+      <a class="client-btn" id="outlook-link-hol" href="#"><span>💼</span> Outlook</a>
+      <a class="client-btn" id="download-link-hol" href="#" download="korean_holidays.ics"><span>⬇️</span> 다운로드</a>
+    </div>
+  </div>
+
+  <!-- 구독 박스 ② 절기·잡절 전용 -->
+  <div class="subscribe-box">
+    <h2>🌿 절기·잡절 전용</h2>
+    <p class="box-desc">24절기와 잡절만 포함합니다. 공휴일 미포함.</p>
+    <div class="url-row">
+      <input class="url-input" id="ics-url-term" readonly value="로딩 중…" />
+      <button class="btn" id="copy-btn-term" onclick="copyUrl('term')">복사</button>
+    </div>
+    <div class="client-grid">
+      <a class="client-btn" id="apple-link-term" href="#"><span>🍎</span> Apple</a>
+      <a class="client-btn" id="google-link-term" href="#" target="_blank"><span>📅</span> Google</a>
+      <a class="client-btn" id="outlook-link-term" href="#"><span>💼</span> Outlook</a>
+      <a class="client-btn" id="download-link-term" href="#" download="korean_solar_terms.ics"><span>⬇️</span> 다운로드</a>
     </div>
   </div>
 
@@ -286,18 +307,24 @@
   <div class="bottom-rule"><span></span><em>매월 1일 자동 갱신 · GitHub Actions</em><span></span></div>
 
   <script>
-    const ICS_FILE = "korean_calendar.ics";
-    const BASE     = location.origin + location.pathname.replace(/\/?$/, "/");
-    const ICS_URL  = BASE + ICS_FILE;
+    const BASE = location.origin + location.pathname.replace(/\/?$/, "/");
+
+    const FEEDS = {
+      hol:  { file: "korean_holidays.ics",    dl: "korean_holidays.ics" },
+      term: { file: "korean_solar_terms.ics", dl: "korean_solar_terms.ics" },
+    };
 
     // URL 세팅
-    document.getElementById("ics-url").value        = ICS_URL;
-    document.getElementById("download-link").href   = ICS_URL;
-    document.getElementById("apple-link").href      = "webcal://" + ICS_URL.replace(/^https?:\/\//, "");
-    document.getElementById("google-link").href     =
-      "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(ICS_URL);
-    document.getElementById("outlook-link").href    =
-      "ms-outlook://calendars/subscribe?url=" + encodeURIComponent(ICS_URL);
+    for (const [key, cfg] of Object.entries(FEEDS)) {
+      const url = BASE + cfg.file;
+      document.getElementById(`ics-url-${key}`).value          = url;
+      document.getElementById(`download-link-${key}`).href     = url;
+      document.getElementById(`apple-link-${key}`).href        = "webcal://" + url.replace(/^https?:\/\//, "");
+      document.getElementById(`google-link-${key}`).href       =
+        "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(url);
+      document.getElementById(`outlook-link-${key}`).href      =
+        "ms-outlook://calendars/subscribe?url=" + encodeURIComponent(url);
+    }
 
     // 메타 JSON 로드
     fetch("meta.json?_=" + Date.now())
@@ -318,10 +345,10 @@
       .catch(() => {});
 
     // 복사
-    function copyUrl() {
-      const url = document.getElementById("ics-url").value;
+    function copyUrl(key) {
+      const url = document.getElementById(`ics-url-${key}`).value;
       navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById("copy-btn");
+        const btn = document.getElementById(`copy-btn-${key}`);
         btn.textContent = "✓ 복사됨";
         btn.classList.add("copied");
         setTimeout(() => { btn.textContent = "복사"; btn.classList.remove("copied"); }, 2000);
