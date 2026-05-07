@@ -1,5 +1,7 @@
 # 🗓️ 한국 절기·공휴일 iCal 자동 생성
 
+https://plusdaeho.github.io/KR_Holidays_Seasons/
+
 한국천문연구원 특일 정보 API (data.go.kr)로 **24절기 · 잡절 · 공휴일**을 `.ics` 파일로 만들고  
 GitHub Pages에 자동 배포하는 저장소입니다.
 
