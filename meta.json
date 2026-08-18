@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-12T03:54:45.549121+09:00",
+  "generated_at": "2026-08-19T03:29:58.693089+09:00",
   "years": [
     2024,
     2025,
@@ -7,10 +7,10 @@
     2027,
     2028
   ],
-  "event_count": 259,
+  "event_count": 0,
   "by_category": {
-    "holiday": 104,
-    "solarTerm": 120,
-    "miscDay": 35
+    "holiday": 0,
+    "solarTerm": 0,
+    "miscDay": 0
   }
 }
