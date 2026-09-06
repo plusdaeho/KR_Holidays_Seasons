@@ -9,6 +9,7 @@
 import os
 import sys
 import json
+import time
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -40,8 +41,15 @@ ENDPOINT_MAP = {
 }
 
 # ── API 호출 ──────────────────────────────────────────────────────────────────
+MAX_RETRIES = 4
+RETRY_BACKOFF_SEC = 2  # 2s, 4s, 8s, 16s
+
+# 호출 실패(재시도 소진)로 데이터를 얻지 못한 (endpoint, year, month) 목록
+failed_calls: list[tuple[str, int, int]] = []
+
+
 def fetch_items(endpoint: str, year: int, month: int) -> list[dict]:
-    """data.go.kr API 한 달치 호출 → item 목록 반환"""
+    """data.go.kr API 한 달치 호출 → item 목록 반환 (실패 시 재시도)"""
     params = {
         "serviceKey": API_KEY,
         "solYear":    str(year),
@@ -51,22 +59,35 @@ def fetch_items(endpoint: str, year: int, month: int) -> list[dict]:
         "_type":      "json",
     }
     url = f"{BASE_URL}/{endpoint}?{urllib.parse.urlencode(params)}"
-    try:
-        with urllib.request.urlopen(url, timeout=15) as resp:
-            raw = json.loads(resp.read().decode("utf-8"))
-    except Exception as e:
-        print(f"  [WARN] {endpoint} {year}-{month:02d} 호출 실패: {e}", file=sys.stderr)
-        return []
 
-    try:
-        body = raw["response"]["body"]
-        items = body.get("items") or {}
-        if not items:
-            return []
-        item = items.get("item", [])
-        return item if isinstance(item, list) else [item]
-    except (KeyError, TypeError):
-        return []
+    last_error: str | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(url, timeout=15) as resp:
+                raw = json.loads(resp.read().decode("utf-8"))
+
+            header = raw.get("response", {}).get("header", {})
+            result_code = str(header.get("resultCode", "00"))
+            if result_code not in ("00", ""):
+                raise RuntimeError(f"API 오류 (resultCode={result_code}): {header.get('resultMsg')}")
+
+            body = raw["response"]["body"]
+            items = body.get("items") or {}
+            if not items:
+                return []
+            item = items.get("item", [])
+            return item if isinstance(item, list) else [item]
+        except Exception as e:
+            last_error = str(e)
+            if attempt < MAX_RETRIES:
+                wait = RETRY_BACKOFF_SEC * (2 ** (attempt - 1))
+                print(f"  [WARN] {endpoint} {year}-{month:02d} 호출 실패 ({attempt}/{MAX_RETRIES}): {e} — {wait}s 후 재시도",
+                      file=sys.stderr)
+                time.sleep(wait)
+
+    print(f"  [ERROR] {endpoint} {year}-{month:02d} 호출 최종 실패: {last_error}", file=sys.stderr)
+    failed_calls.append((endpoint, year, month))
+    return []
 
 
 def fetch_year(year: int) -> list[dict]:
@@ -178,6 +199,13 @@ def main():
         all_events.extend(fetch_year(year))
 
     print(f"✅ 총 {len(all_events)}개 이벤트 수집 완료", file=sys.stderr)
+
+    if failed_calls:
+        print(f"❌ {len(failed_calls)}건의 API 호출이 재시도 후에도 실패했습니다:", file=sys.stderr)
+        for endpoint, year, month in failed_calls:
+            print(f"   - {endpoint} {year}-{month:02d}", file=sys.stderr)
+        print("   불완전한 데이터로 배포하지 않기 위해 중단합니다.", file=sys.stderr)
+        sys.exit(1)
 
     os.makedirs(OUT_DIR, exist_ok=True)
 
