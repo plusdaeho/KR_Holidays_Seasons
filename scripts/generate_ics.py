@@ -41,8 +41,9 @@ ENDPOINT_MAP = {
 }
 
 # ── API 호출 ──────────────────────────────────────────────────────────────────
-MAX_RETRIES = 4
-RETRY_BACKOFF_SEC = 2  # 2s, 4s, 8s, 16s
+REQUEST_TIMEOUT_SEC = 10
+MAX_RETRIES = 3
+RETRY_BACKOFF_SEC = 2  # 2s, 4s
 
 # 호출 실패(재시도 소진)로 데이터를 얻지 못한 (endpoint, year, month) 목록
 failed_calls: list[tuple[str, int, int]] = []
@@ -63,7 +64,7 @@ def fetch_items(endpoint: str, year: int, month: int) -> list[dict]:
     last_error: str | None = None
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            with urllib.request.urlopen(url, timeout=15) as resp:
+            with urllib.request.urlopen(url, timeout=REQUEST_TIMEOUT_SEC) as resp:
                 raw = json.loads(resp.read().decode("utf-8"))
 
             header = raw.get("response", {}).get("header", {})
@@ -191,6 +192,14 @@ def main():
     now  = datetime.now(tz=KST)
     base = now.year
     years = list(range(base - YEAR_RANGE, base + YEAR_RANGE + 1))
+
+    # 사전 연결 확인: API 서버 자체가 응답하지 않으면 전체 수집을 시도하지 않고 바로 중단
+    print("🔍 API 연결 확인 중...", file=sys.stderr)
+    fetch_items(ENDPOINT_MAP["holiday"], now.year, now.month)
+    if failed_calls:
+        print("❌ data.go.kr API에 연결할 수 없습니다. 서비스 장애이거나 서비스키 문제일 수 있습니다.", file=sys.stderr)
+        print("   전체 수집을 중단합니다 (불필요하게 오래 기다리지 않기 위함).", file=sys.stderr)
+        sys.exit(1)
 
     print(f"📅 수집 연도: {years}", file=sys.stderr)
 
